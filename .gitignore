@@ -1,5 +1,6 @@
 # Publicar SOMENTE o site estático. Tudo o mais (docs internos de negócio) fica fora.
 *
 !index.html
+!pt.html
 !sample-report.html
 !.gitignore
