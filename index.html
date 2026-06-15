@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Firmware Code &amp; Safety Review — Embedded Firmware Engineer (Safety-Critical &amp; Connected Devices)</title>
+<meta name="description" content="A fixed-scope written review of your embedded firmware: bugs, MISRA/security violations, architecture risks and prioritized fixes. Safety-critical & connected devices. Async, no meetings." />
+<meta property="og:title" content="Firmware Code & Safety Review" />
+<meta property="og:description" content="A senior, written review of your firmware — bugs, MISRA/security violations, architecture risks, prioritized fixes. Fixed price, a few days, zero meetings." />
+<meta property="og:type" content="website" />
+<style>
+  :root{
+    --ink:#0b1220; --ink-2:#111a2e; --slate:#334155; --muted:#64748b;
+    --line:#e2e8f0; --bg:#ffffff; --bg-soft:#f6f8fc; --accent:#2563eb; --accent-d:#1d4ed8;
+    --ok:#16a34a; --warn:#d97706; --crit:#dc2626; --radius:14px; --maxw:1080px;
+    --shadow:0 1px 2px rgba(16,24,40,.06),0 8px 28px rgba(16,24,40,.06);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink);background:var(--bg);line-height:1.6;-webkit-font-smoothing:antialiased}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 22px}
+  h1,h2,h3{line-height:1.18;letter-spacing:-.02em;margin:0 0 .5em}
+  h1{font-size:clamp(2rem,4.6vw,3.25rem)}
+  h2{font-size:clamp(1.5rem,3vw,2.1rem)}
+  p{margin:0 0 1rem}
+  .eyebrow{font-size:.8rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+  .muted{color:var(--muted)}
+  .btn{display:inline-block;font-weight:600;border-radius:10px;padding:.8rem 1.25rem;cursor:pointer;
+    border:1px solid transparent;transition:.15s;font-size:1rem}
+  .btn-primary{background:var(--accent);color:#fff}
+  .btn-primary:hover{background:var(--accent-d);text-decoration:none}
+  .btn-ghost{background:#fff;color:var(--ink);border-color:var(--line)}
+  .btn-ghost:hover{border-color:var(--muted);text-decoration:none}
+  /* nav */
+  header.nav{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.86);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line)}
+  .nav-in{display:flex;align-items:center;justify-content:space-between;height:62px}
+  .brand{font-weight:800;letter-spacing:-.02em;color:var(--ink);font-size:1.05rem}
+  .brand span{color:var(--accent)}
+  .nav-links{display:flex;gap:1.4rem;align-items:center}
+  .nav-links a{color:var(--slate);font-weight:500;font-size:.95rem}
+  .nav-links .btn{padding:.5rem .9rem;font-size:.9rem}
+  @media(max-width:760px){.nav-links a:not(.btn){display:none}}
+  /* hero */
+  .hero{padding:72px 0 40px;background:
+    radial-gradient(1200px 400px at 80% -10%,rgba(37,99,235,.10),transparent 60%),var(--bg)}
+  .hero h1{max-width:14ch}
+  .lead{font-size:1.2rem;color:var(--slate);max-width:60ch}
+  .cta-row{display:flex;gap:.8rem;flex-wrap:wrap;margin:1.6rem 0 1.2rem}
+  .chips{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:1.4rem}
+  .chip{font-size:.8rem;font-weight:600;color:var(--slate);background:var(--bg-soft);
+    border:1px solid var(--line);border-radius:999px;padding:.35rem .7rem}
+  /* sections */
+  section{padding:56px 0;border-top:1px solid var(--line)}
+  .sec-head{max-width:62ch;margin-bottom:2rem}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+  @media(max-width:760px){.grid-2{grid-template-columns:1fr}}
+  .card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow)}
+  .card h3{font-size:1.15rem;margin-bottom:.4rem}
+  .list{list-style:none;padding:0;margin:0}
+  .list li{position:relative;padding-left:1.6rem;margin:.5rem 0;color:var(--slate)}
+  .list li::before{content:"";position:absolute;left:0;top:.55em;width:.55rem;height:.55rem;
+    border:2px solid var(--accent);border-radius:50%}
+  .check li::before{content:"✓";border:none;color:var(--ok);font-weight:800;top:0;left:.1rem}
+  /* pricing */
+  .price-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  @media(max-width:860px){.price-grid{grid-template-columns:1fr}}
+  .tier{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:var(--radius);
+    padding:24px;background:#fff;box-shadow:var(--shadow)}
+  .tier.feat{border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,.12),var(--shadow)}
+  .tier .tag{font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+  .tier .amt{font-size:2rem;font-weight:800;letter-spacing:-.02em;margin:.2rem 0}
+  .tier .amt small{font-size:.95rem;font-weight:500;color:var(--muted)}
+  .tier .list{flex:1;margin:.6rem 0 1.2rem}
+  .badge{display:inline-block;font-size:.72rem;font-weight:700;background:rgba(37,99,235,.1);color:var(--accent-d);
+    border-radius:999px;padding:.2rem .6rem;align-self:flex-start;margin-bottom:.4rem}
+  /* sample band */
+  .band{background:var(--ink);color:#cdd7ea;border-radius:var(--radius);padding:34px;display:flex;
+    gap:24px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+  .band h2{color:#fff;margin:0 0 .3rem}
+  .band p{margin:0;max-width:52ch}
+  /* work */
+  .work-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  @media(max-width:860px){.work-grid{grid-template-columns:1fr}}
+  .work .k{font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+  .work h3{font-size:1.05rem;margin:.4rem 0 .5rem}
+  .work .out{margin-top:.8rem;padding-top:.8rem;border-top:1px dashed var(--line);font-size:.92rem;color:var(--ink)}
+  .work .out b{color:var(--ok)}
+  /* faq */
+  details{border:1px solid var(--line);border-radius:12px;padding:.4rem 1rem;margin-bottom:.7rem;background:#fff}
+  details summary{cursor:pointer;font-weight:600;padding:.6rem 0;list-style:none}
+  details summary::-webkit-details-marker{display:none}
+  details summary::after{content:"+";float:right;color:var(--accent);font-weight:800}
+  details[open] summary::after{content:"–"}
+  details p{margin:.2rem 0 .9rem;color:var(--slate)}
+  /* cta final */
+  .final{background:linear-gradient(180deg,var(--bg-soft),#fff);text-align:center}
+  .final .card{max-width:620px;margin:0 auto;text-align:center}
+  footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-size:.9rem}
+  .foot-in{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
+  /* form */
+  form label{display:flex;flex-direction:column;font-size:.82rem;font-weight:600;color:var(--slate);gap:.3rem}
+  form input,form select,form textarea{font:inherit;font-weight:400;padding:.6rem .7rem;border:1px solid var(--line);
+    border-radius:8px;background:#fff;color:var(--ink);width:100%}
+  form textarea{resize:vertical}
+  form input:focus,form select:focus,form textarea:focus{outline:2px solid var(--accent);border-color:var(--accent)}
+  form button{margin-top:.3rem}
+  .frow{display:grid;grid-template-columns:1fr 1fr;gap:.85rem}
+  @media(max-width:560px){.frow{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap nav-in">
+    <div class="brand">Talles Zanotti <span>· Firmware</span></div>
+    <nav class="nav-links">
+      <a href="#offer">The Review</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#work">Work</a>
+      <a href="#faq">FAQ</a>
+      <a class="btn btn-primary" href="#contact">Request a Review</a>
+    </nav>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero" style="border-top:none">
+  <div class="wrap">
+    <p class="eyebrow">Embedded Firmware Engineer · Safety-Critical &amp; Connected Devices</p>
+    <h1>Firmware for devices that can't fail.</h1>
+    <p class="lead">I build and review reliable firmware for devices that can't fail — detection/safety
+      systems and connected (IoT) products — plus the test automation and RF-certification work that gets
+      them to market.</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="#contact">Get a Firmware Code &amp; Safety Review →</a>
+      <a class="btn btn-ghost" href="sample-report.html">See a sample report</a>
+    </div>
+    <div class="chips">
+      <span class="chip">ISO 26262</span><span class="chip">IEC 61508</span><span class="chip">IEC 62304</span>
+      <span class="chip">MISRA C</span><span class="chip">STM32</span><span class="chip">ESP32</span>
+      <span class="chip">8051 → Microchip</span><span class="chip">FreeRTOS</span>
+      <span class="chip">RF / Sub-GHz</span><span class="chip">Test Automation</span>
+    </div>
+  </div>
+</section>
+
+<!-- OFFER -->
+<section id="offer">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">The door-opener</p>
+      <h2>Firmware Code &amp; Safety Review</h2>
+      <p class="muted">Send me your repository. You get back a written report: bugs, MISRA/security
+        violations, architecture risks, and a prioritized list of fixes. Fixed scope, a few days,
+        <strong>zero meetings</strong>. The fastest way to find out what a senior set of eyes sees in
+        your firmware — before it ships.</p>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <h3>What you send</h3>
+        <ul class="list">
+          <li>Read access to the repo (or a zip) — C / C++ embedded codebase</li>
+          <li>Target MCU/family and toolchain (STM32, ESP32, Microchip, 8051, NXP…)</li>
+          <li>RTOS, if any (FreeRTOS, Zephyr, bare-metal)</li>
+          <li>What worries you most, and any safety/regulatory context</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>What you get back</h3>
+        <ul class="list check">
+          <li>Written report (PDF) — severity-ranked findings</li>
+          <li>Concrete bugs: concurrency/ISR, memory, timing, peripheral misuse</li>
+          <li>MISRA C &amp; security (CWE) violations that matter</li>
+          <li>Architecture &amp; reliability risks (watchdog, OTA, fault handling)</li>
+          <li>Prioritized remediation plan you can hand to your team</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing" style="background:var(--bg-soft)">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">Fixed scope, fixed price</p>
+      <h2>Pick the depth you need</h2>
+      <p class="muted">No hourly billing, no surprises. Price depends on codebase size and review depth.
+        Every tier ends with a written report and a prioritized fix list.</p>
+    </div>
+    <div class="price-grid">
+      <div class="tier">
+        <span class="tag">Focused</span>
+        <div class="amt">$500 <small>USD</small></div>
+        <p class="muted" style="margin:.1rem 0 .6rem">Single module or driver, up to ~3k LOC.</p>
+        <ul class="list">
+          <li>Targeted review of one critical area</li>
+          <li>Top bugs + MISRA/security flags</li>
+          <li>Report + prioritized fixes</li>
+          <li>~3 business days</li>
+        </ul>
+        <a class="btn btn-ghost" href="#contact">Request Focused</a>
+      </div>
+      <div class="tier feat">
+        <span class="badge">Most common</span>
+        <span class="tag">Standard</span>
+        <div class="amt">$900 <small>USD</small></div>
+        <p class="muted" style="margin:.1rem 0 .6rem">Full small/medium codebase, up to ~15k LOC.</p>
+        <ul class="list">
+          <li>Whole-firmware review</li>
+          <li>Concurrency, memory, timing, peripherals</li>
+          <li>MISRA C + security (CWE) pass</li>
+          <li>Architecture &amp; reliability risks</li>
+          <li>~5 business days</li>
+        </ul>
+        <a class="btn btn-primary" href="#contact">Request Standard</a>
+      </div>
+      <div class="tier">
+        <span class="tag">Deep / Safety</span>
+        <div class="amt">$1,500 <small>USD</small></div>
+        <p class="muted" style="margin:.1rem 0 .6rem">Larger or safety-critical codebase.</p>
+        <ul class="list">
+          <li>Everything in Standard</li>
+          <li>Functional-safety lens (ISO 26262 / IEC 61508 / IEC 62304)</li>
+          <li>Fault-handling &amp; failure-mode review</li>
+          <li>Certification-readiness notes</li>
+          <li>~7–10 business days</li>
+        </ul>
+        <a class="btn btn-ghost" href="#contact">Request Deep</a>
+      </div>
+    </div>
+    <p class="muted" style="margin-top:1.2rem;font-size:.92rem">A review is the door-opener — many clients
+      continue into implementation, a fractional retainer, or a deeper architecture sprint.</p>
+  </div>
+</section>
+
+<!-- SAMPLE BAND -->
+<section>
+  <div class="wrap">
+    <div class="band">
+      <div>
+        <h2>See exactly what you get</h2>
+        <p>A real, anonymized example of the deliverable — executive summary, severity-ranked findings,
+          and a remediation plan. No guessing what you're paying for.</p>
+      </div>
+      <a class="btn btn-primary" href="sample-report.html">Open the sample report →</a>
+    </div>
+  </div>
+</section>
+
+<!-- WORK -->
+<section id="work">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">Selected work</p>
+      <h2>Background in firmware that has to work</h2>
+      <p class="muted">Anonymized under NDA — focused on methodology and outcome. Automotive,
+        life-safety detection, and connected devices across multiple MCU vendors.</p>
+    </div>
+    <div class="work-grid">
+      <div class="card work">
+        <div class="k">Life-safety · STM32</div>
+        <h3>Detection &amp; alarm panel firmware</h3>
+        <p class="muted">Firmware for a life-safety detection panel where a missed event is not an option.
+          Deterministic event handling, fault supervision, and a functional-safety mindset throughout.</p>
+        <div class="out"><b>Outcome:</b> a panel that fails safe and meets its detection guarantees.</div>
+      </div>
+      <div class="card work">
+        <div class="k">Connected / IoT · ESP32</div>
+        <h3>Real-time monitoring device</h3>
+        <p class="muted">A real-time connected monitor (automotive context) on ESP32 — low-latency sensing,
+          robust connectivity, and a test jig that validated every unit coming off the line.</p>
+        <div class="out"><b>Outcome:</b> reliable real-time data + repeatable manufacturing test.</div>
+      </div>
+      <div class="card work">
+        <div class="k">Legacy modernization · 8051 → Microchip</div>
+        <h3>Firmware architecture migration</h3>
+        <p class="muted">Migrated an aging 8051 codebase to a modern Microchip architecture — untangling
+          legacy code into a maintainable, testable structure without losing field-proven behavior.</p>
+        <div class="out"><b>Outcome:</b> lower maintenance cost and a platform ready for new features.</div>
+      </div>
+    </div>
+    <p class="muted" style="margin-top:1.2rem;font-size:.92rem">Also: RF / sub-GHz design and
+      radio-certification work, and automated test rigs for manufacturing readiness.</p>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq" style="background:var(--bg-soft)">
+  <div class="wrap">
+    <div class="sec-head"><p class="eyebrow">Questions</p><h2>How it works</h2></div>
+    <div style="max-width:760px">
+      <details open><summary>Is my code confidential?</summary>
+        <p>Yes. I'll sign your NDA before you share anything, and access is removed when the review is
+          delivered. Nothing from your codebase is ever reused or disclosed.</p></details>
+      <details><summary>Do we need to get on a call?</summary>
+        <p>No. The whole process is async and written — intake form, the report, and follow-up by message.
+          That keeps it fast and works across time zones. A call is optional, never required.</p></details>
+      <details><summary>How do I pay, and when?</summary>
+        <p>Fixed price agreed up front. Invoice in USD (bank transfer / Wise). Typically 50% to start and
+          50% on delivery for first-time clients; full upfront for the Focused tier.</p></details>
+      <details><summary>What if you don't find much?</summary>
+        <p>Good — that's a signal in itself. You still get a written report documenting what was reviewed,
+          the standards checked, and a clear statement of the firmware's risk posture you can share with
+          stakeholders or auditors.</p></details>
+      <details><summary>Which languages / standards do you cover?</summary>
+        <p>Embedded C (and C++). MISRA C:2012, CWE/security, and a functional-safety lens for ISO 26262 /
+          IEC 61508 / IEC 62304 on the Deep tier. MCUs: STM32, ESP32, Microchip, 8051, and others.</p></details>
+      <details><summary>Not sure which tier fits?</summary>
+        <p>Send the repo size and what worries you in the form — I'll recommend the right tier (or tell you
+          a review isn't worth it) before you commit a cent.</p></details>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT / INTAKE -->
+<section id="contact" class="final">
+  <div class="wrap">
+    <div class="card" style="max-width:700px;text-align:left">
+      <h2 style="text-align:center">Get eyes on your firmware</h2>
+      <p class="muted" style="text-align:center">Tell me about your codebase. I'll reply within one business
+        day with a recommended tier and a delivery date — no call required.</p>
+      <form id="intake" style="display:grid;gap:.85rem;margin-top:1.3rem">
+        <input type="hidden" name="access_key" value="WEB3FORMS_ACCESS_KEY">
+        <input type="hidden" name="subject" value="New Firmware Review request">
+        <input type="hidden" name="from_name" value="Firmware Review site">
+        <input type="checkbox" name="botcheck" style="display:none" tabindex="-1" autocomplete="off">
+        <div class="frow">
+          <label>Your name<input name="name" required></label>
+          <label>Work email<input name="email" type="email" required></label>
+        </div>
+        <label>Company / project<input name="company"></label>
+        <div class="frow">
+          <label>Target MCU / family<input name="mcu" placeholder="STM32L4, ESP32-S3, PIC, 8051…"></label>
+          <label>RTOS
+            <select name="rtos"><option>FreeRTOS</option><option>Zephyr</option><option>Bare-metal</option><option>Other</option></select>
+          </label>
+        </div>
+        <div class="frow">
+          <label>Codebase size
+            <select name="size"><option>Single module (~3k LOC)</option><option>Small/medium (~3k–15k)</option><option>Large (15k+)</option><option>Not sure</option></select>
+          </label>
+          <label>Tier
+            <select name="tier"><option>Not sure — recommend one</option><option>Focused ($500)</option><option>Standard ($900)</option><option>Deep / Safety ($1,500)</option></select>
+          </label>
+        </div>
+        <label>Safety-critical / regulated?
+          <select name="safety"><option>No</option><option>ISO 26262</option><option>IEC 61508</option><option>IEC 62304 / medical</option><option>Other</option></select>
+        </label>
+        <label>Repo link + what worries you most<textarea name="notes" rows="4" required></textarea></label>
+        <button class="btn btn-primary" type="submit">Send request</button>
+        <p id="formStatus" style="font-size:.9rem;margin:.4rem 0 0;text-align:center"></p>
+        <p class="muted" style="font-size:.85rem;margin:.2rem 0 0;text-align:center">Prefer email?
+          <a href="mailto:talleszanotti@gmail.com">talleszanotti@gmail.com</a></p>
+      </form>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot-in">
+    <div>© <span>Talles Zanotti</span> — Embedded Firmware Engineer · Safety-Critical &amp; Connected Devices</div>
+    <div><a href="https://www.linkedin.com/in/TallesZR">LinkedIn</a> · <a href="mailto:talleszanotti@gmail.com">Email</a> · <a href="sample-report.html">Sample report</a></div>
+  </div>
+</footer>
+
+<script>
+  document.getElementById('intake').addEventListener('submit', async function(e){
+    e.preventDefault();
+    var form = e.target,
+        status = document.getElementById('formStatus'),
+        btn = form.querySelector('button[type=submit]');
+    btn.disabled = true; status.style.color = '#64748b'; status.textContent = 'Sending…';
+    try{
+      var res = await fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        headers: { 'Accept': 'application/json' },
+        body: new FormData(form)
+      });
+      var data = await res.json();
+      if (data.success){
+        form.reset();
+        status.style.color = '#16a34a';
+        status.textContent = "Thanks — your request is in. I'll reply within one business day.";
+      } else {
+        throw new Error(data.message || 'Submit failed');
+      }
+    } catch(err){
+      status.style.color = '#dc2626';
+      status.innerHTML = "Couldn't send — please email <a href='mailto:talleszanotti@gmail.com'>talleszanotti@gmail.com</a>.";
+    } finally { btn.disabled = false; }
+  });
+</script>
+
+</body>
+</html>

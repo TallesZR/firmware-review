@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Firmware Code &amp; Safety Review — Sample Deliverable</title>
+<style>
+  :root{
+    --ink:#0b1220;--slate:#334155;--muted:#64748b;--line:#e2e8f0;--bg:#f6f8fc;
+    --crit:#dc2626;--high:#ea580c;--med:#d97706;--low:#0891b2;--ok:#16a34a;--accent:#2563eb;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);line-height:1.55;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  .page{max-width:820px;margin:24px auto;background:#fff;border:1px solid var(--line);
+    box-shadow:0 8px 30px rgba(16,24,40,.08)}
+  .pad{padding:44px 52px}
+  .topbar{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+  .topbar .pad{padding:12px 52px;display:flex;justify-content:space-between;align-items:center}
+  .back{font-size:.9rem;color:var(--accent);text-decoration:none}
+  .ribbon{font-size:.72rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+    color:#fff;background:var(--accent);border-radius:6px;padding:.3rem .7rem}
+  h1{font-size:1.85rem;letter-spacing:-.02em;margin:.2rem 0 .1rem}
+  h2{font-size:1.15rem;letter-spacing:-.01em;margin:2rem 0 .6rem;padding-bottom:.35rem;
+    border-bottom:2px solid var(--ink)}
+  h3{font-size:1rem;margin:1.3rem 0 .3rem}
+  p{margin:0 0 .8rem;color:var(--slate)}
+  .meta{display:grid;grid-template-columns:1fr 1fr;gap:6px 28px;font-size:.9rem;margin:1rem 0 0;
+    border-top:1px solid var(--line);padding-top:14px}
+  .meta div{color:var(--muted)} .meta b{color:var(--ink);font-weight:600}
+  table{width:100%;border-collapse:collapse;font-size:.88rem;margin:.6rem 0 1rem}
+  th,td{text-align:left;padding:.55rem .6rem;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:#fafcff}
+  .sev{font-weight:700;font-size:.72rem;letter-spacing:.04em;text-transform:uppercase;
+    border-radius:5px;padding:.15rem .45rem;color:#fff;white-space:nowrap}
+  .s-crit{background:var(--crit)} .s-high{background:var(--high)} .s-med{background:var(--med)} .s-low{background:var(--low)}
+  .pill{display:inline-block;font-size:.72rem;font-weight:600;color:var(--slate);
+    background:#f1f5f9;border:1px solid var(--line);border-radius:999px;padding:.12rem .55rem;margin:0 .2rem .2rem 0}
+  .summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:1rem 0}
+  .stat{border:1px solid var(--line);border-radius:10px;padding:12px;text-align:center}
+  .stat .n{font-size:1.7rem;font-weight:800;line-height:1}
+  .stat .l{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-top:.3rem}
+  .finding{border:1px solid var(--line);border-left:4px solid var(--muted);border-radius:8px;
+    padding:16px 18px;margin:.9rem 0}
+  .finding.crit{border-left-color:var(--crit)} .finding.high{border-left-color:var(--high)}
+  .finding.med{border-left-color:var(--med)} .finding.low{border-left-color:var(--low)}
+  .finding h3{margin-top:0;display:flex;gap:.6rem;align-items:center}
+  .finding .id{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.82rem;color:var(--muted)}
+  .lbl{font-size:.74rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-top:.7rem}
+  code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  pre{background:#0b1220;color:#e2e8f0;border-radius:8px;padding:12px 14px;overflow:auto;font-size:.82rem;margin:.4rem 0}
+  pre .c{color:#7dd3fc} pre .w{color:#fca5a5}
+  .note{background:#fafcff;border:1px solid var(--line);border-radius:8px;padding:14px 16px;font-size:.9rem}
+  .foot{font-size:.82rem;color:var(--muted);border-top:1px solid var(--line);margin-top:2rem;padding-top:14px}
+  @media print{
+    body{background:#fff} .topbar{display:none} .page{box-shadow:none;border:none;margin:0;max-width:none}
+    .pad{padding:0 6px} .finding{break-inside:avoid} table{break-inside:auto}
+  }
+  @media(max-width:680px){.summary-grid{grid-template-columns:repeat(2,1fr)} .meta{grid-template-columns:1fr} .pad{padding:28px 22px}}
+</style>
+</head>
+<body>
+
+<div class="topbar"><div class="pad">
+  <a class="back" href="index.html">← Back to site</a>
+  <span style="font-size:.85rem;color:var(--muted)">Tip: press <b>Ctrl/Cmd&nbsp;+&nbsp;P</b> → Save as PDF</span>
+</div></div>
+
+<div class="page"><div class="pad">
+
+  <span class="ribbon">Confidential · Sample Deliverable</span>
+  <h1 style="margin-top:14px">Firmware Code &amp; Safety Review</h1>
+  <p style="margin:0;color:var(--muted)">A representative example of the written deliverable. Project details
+    are anonymized; findings are illustrative of the issue classes a review surfaces.</p>
+
+  <div class="meta">
+    <div>Client <b>Anonymized — connected sensor OEM</b></div>
+    <div>Tier <b>Standard ($900)</b></div>
+    <div>Target <b>ESP32-S3 + STM32L4 · FreeRTOS</b></div>
+    <div>Codebase <b>~12,400 LOC (C)</b></div>
+    <div>Reviewer <b>Talles Zanotti — Embedded Firmware Engineer</b></div>
+    <div>Standards <b>MISRA C:2012 · CWE · IEC 61508 lens</b></div>
+  </div>
+
+  <h2>1 · Scope &amp; methodology</h2>
+  <p>This review covered the full application firmware for a battery-powered connected sensor: sensor
+    acquisition, FreeRTOS task structure, the BLE/Wi-Fi connectivity layer, OTA update path, and the
+    power-management state machine. The bootloader and vendor SDK were treated as out of scope except
+    where the application interacts with them.</p>
+  <p>Method: manual line-by-line review of safety- and reliability-relevant paths, supported by static
+    analysis (cppcheck + clang-tidy with a MISRA-oriented profile), compiler-warning audit at
+    <code>-Wall -Wextra</code>, and a targeted concurrency review of all data shared between ISRs, tasks,
+    and DMA. No hardware was instrumented for this engagement.</p>
+
+  <h2>2 · Executive summary</h2>
+  <p>The firmware is well-structured and the team clearly understands the product domain. However, the
+    review found <b>two critical defects</b> that can cause field hangs or silent data corruption, plus
+    several high/medium issues that undermine long-term reliability. None require a redesign — all are
+    addressable within the remediation plan in §5. Overall risk posture: <b>Elevated — not yet
+    field-ready</b> until C-1 and C-2 are resolved.</p>
+
+  <div class="summary-grid">
+    <div class="stat"><div class="n" style="color:var(--crit)">2</div><div class="l">Critical</div></div>
+    <div class="stat"><div class="n" style="color:var(--high)">3</div><div class="l">High</div></div>
+    <div class="stat"><div class="n" style="color:var(--med)">4</div><div class="l">Medium</div></div>
+    <div class="stat"><div class="n" style="color:var(--low)">3</div><div class="l">Low</div></div>
+  </div>
+
+  <h3>Findings at a glance</h3>
+  <table>
+    <thead><tr><th>ID</th><th>Sev</th><th>Category</th><th>Area</th><th>Summary</th></tr></thead>
+    <tbody>
+      <tr><td>C-1</td><td><span class="sev s-crit">Crit</span></td><td>Concurrency</td><td>sensor_isr.c</td><td>Shared sample buffer read in task while written in ISR without protection</td></tr>
+      <tr><td>C-2</td><td><span class="sev s-crit">Crit</span></td><td>Memory / Security</td><td>net_rx.c</td><td>Unbounded copy of network payload into fixed stack buffer</td></tr>
+      <tr><td>H-1</td><td><span class="sev s-high">High</span></td><td>Reliability</td><td>ota.c</td><td>Watchdog disabled for entire OTA; hang bricks device until manual reset</td></tr>
+      <tr><td>H-2</td><td><span class="sev s-high">High</span></td><td>Real-time</td><td>i2c_drv.c</td><td>Blocking bus wait inside ISR context can stall the scheduler</td></tr>
+      <tr><td>H-3</td><td><span class="sev s-high">High</span></td><td>Fault handling</td><td>main.c</td><td>HardFault handler is an empty infinite loop — no capture, no safe state</td></tr>
+      <tr><td>M-1</td><td><span class="sev s-med">Med</span></td><td>RTOS</td><td>tasks.c</td><td>Task stack sizes unverified; no high-water-mark check</td></tr>
+      <tr><td>M-2</td><td><span class="sev s-med">Med</span></td><td>MISRA C</td><td>multiple</td><td>Implicit narrowing conversions on sensor math (Rule 10.x)</td></tr>
+      <tr><td>M-3</td><td><span class="sev s-med">Med</span></td><td>Robustness</td><td>adc.c</td><td>No bounds check on channel index from config</td></tr>
+      <tr><td>M-4</td><td><span class="sev s-med">Med</span></td><td>Power</td><td>pm.c</td><td>Race between sleep entry and pending IRQ can drop wake events</td></tr>
+      <tr><td>L-1</td><td><span class="sev s-low">Low</span></td><td>MISRA C</td><td>multiple</td><td>Magic numbers / undocumented deviations</td></tr>
+      <tr><td>L-2</td><td><span class="sev s-low">Low</span></td><td>Maintainability</td><td>config.h</td><td>Build-time config not centralized; risk of divergent builds</td></tr>
+      <tr><td>L-3</td><td><span class="sev s-low">Low</span></td><td>Diagnostics</td><td>log.c</td><td>No persistent fault log for field post-mortem</td></tr>
+    </tbody>
+  </table>
+
+  <h2>3 · Critical findings (detail)</h2>
+
+  <div class="finding crit">
+    <h3><span class="sev s-crit">Critical</span> <span>Unprotected ISR/task shared buffer</span> <span class="id">C-1 · sensor_isr.c</span></h3>
+    <p><span class="pill">Concurrency</span><span class="pill">MISRA C:2012 Dir 4.1</span><span class="pill">Data race</span></p>
+    <div class="lbl">Issue</div>
+    <p>The sample ring buffer is written by <code>ADC_IRQHandler()</code> and read by
+      <code>vAcquisitionTask()</code>. The index variables are plain <code>uint16_t</code> with no
+      <code>volatile</code> qualifier and no critical section. On a 32-bit core a partially updated index
+      can be read, and the compiler may cache the value in a register across the loop — yielding stale or
+      torn reads, intermittently and unreproducibly in the lab.</p>
+    <div class="lbl">Impact</div>
+    <p>Silent corruption of sensor data and occasional missed samples. The failure rate scales with
+      acquisition rate, so it tends to appear in the field, not on the bench — the worst kind of bug.</p>
+    <div class="lbl">Evidence</div>
+<pre><span class="c">// sensor_isr.c</span>
+static uint16_t head, tail;        <span class="w">// not volatile; shared ISR &lt;-&gt; task</span>
+void ADC_IRQHandler(void){ buf[head++] = ADC1->DR; }     <span class="w">// no wrap guard, no barrier</span></pre>
+    <div class="lbl">Recommendation</div>
+    <p>Qualify shared state as <code>volatile</code>, make the index update atomic (single-writer ISR,
+      single-reader task is fine if reads/writes are atomic and bounded), and wrap the multi-field update in
+      a short critical section (<code>taskENTER_CRITICAL()</code> / <code>__disable_irq()</code>). Add the
+      missing ring-buffer wrap. Prefer a lock-free SPSC queue pattern documented for the team.</p>
+  </div>
+
+  <div class="finding crit">
+    <h3><span class="sev s-crit">Critical</span> <span>Unbounded copy of network payload</span> <span class="id">C-2 · net_rx.c</span></h3>
+    <p><span class="pill">CWE-120 Buffer Overflow</span><span class="pill">MISRA C:2012 Rule 21.17</span><span class="pill">Security</span></p>
+    <div class="lbl">Issue</div>
+    <p>Incoming frame length is taken from the wire and used to copy into a 256-byte stack buffer with no
+      check that it fits. A malformed or malicious packet overflows the stack frame.</p>
+    <div class="lbl">Impact</div>
+    <p>Remote stack smashing — at minimum a crash/DoS, at worst code execution on a connected device.
+      For an internet-reachable product this is a shipping blocker.</p>
+    <div class="lbl">Evidence</div>
+<pre><span class="c">// net_rx.c</span>
+uint8_t frame[256];
+memcpy(frame, pkt->data, pkt->len);   <span class="w">// pkt-&gt;len attacker-controlled, no bound check</span></pre>
+    <div class="lbl">Recommendation</div>
+    <p>Validate <code>pkt-&gt;len &lt;= sizeof(frame)</code> before the copy and reject oversized frames; replace
+      with a length-checked copy helper used project-wide. Treat all wire-sourced lengths as untrusted at the
+      boundary, and add a fuzz/negative test for the parser.</p>
+  </div>
+
+  <h2>4 · High findings (detail)</h2>
+
+  <div class="finding high">
+    <h3><span class="sev s-high">High</span> <span>Watchdog disabled across OTA</span> <span class="id">H-1 · ota.c</span></h3>
+    <p><span class="pill">Reliability</span><span class="pill">IEC 61508 — safe state</span></p>
+    <div class="lbl">Issue &amp; impact</div>
+    <p>The independent watchdog is stopped for the full OTA flow "to avoid spurious resets during flash
+      writes." If the transfer stalls (lost link, power sag), the device hangs with no recovery path until a
+      human power-cycles it — unacceptable for a remote/connected product.</p>
+    <div class="lbl">Recommendation</div>
+    <p>Keep the watchdog running; refresh it at bounded checkpoints between flash operations. Add a transfer
+      timeout that rolls back to the known-good image, and verify the new image (CRC/signature) before
+      marking it bootable. Power-loss during OTA should always leave a bootable device.</p>
+  </div>
+
+  <div class="finding high">
+    <h3><span class="sev s-high">High</span> <span>Blocking wait inside ISR</span> <span class="id">H-2 · i2c_drv.c</span></h3>
+    <p><span class="pill">Real-time</span><span class="pill">MISRA C:2012 Dir 4.1</span></p>
+    <div class="lbl">Issue &amp; impact</div>
+    <p>A busy-wait on an I²C status flag runs inside interrupt context. If the bus is held (stuck slave,
+      missing pull-up), the ISR spins, blocking all lower-priority interrupts and the scheduler — a system-wide
+      stall from a single peripheral fault.</p>
+    <div class="lbl">Recommendation</div>
+    <p>Move the transfer to a non-blocking interrupt/DMA-driven state machine with a timeout and bus-recovery
+      sequence. ISRs should do minimal, bounded work and hand off to a task.</p>
+  </div>
+
+  <div class="finding high">
+    <h3><span class="sev s-high">High</span> <span>Fault handler does nothing</span> <span class="id">H-3 · main.c</span></h3>
+    <p><span class="pill">Fault handling</span><span class="pill">Diagnostics</span></p>
+    <div class="lbl">Issue &amp; impact</div>
+    <p><code>HardFault_Handler()</code> is <code>while(1){}</code>. On a fault the device freezes with no
+      diagnostics and no defined safe state — field failures are uninvestigable and the product doesn't fail
+      safe.</p>
+    <div class="lbl">Recommendation</div>
+    <p>Capture the stacked fault context (PC, LR, PSR, fault status registers) to a persistent region,
+      drive outputs to a defined safe state, then perform a controlled reset. Surface the fault record in the
+      next session for field post-mortem.</p>
+  </div>
+
+  <h2>5 · Prioritized remediation plan</h2>
+  <table>
+    <thead><tr><th>Priority</th><th>Action</th><th>Findings</th><th>Est. effort</th></tr></thead>
+    <tbody>
+      <tr><td><b>1 — Before any field unit</b></td><td>Fix the data race and the network-payload overflow</td><td>C-1, C-2</td><td>1–2 days</td></tr>
+      <tr><td><b>2 — Before next release</b></td><td>Make OTA power-safe; remove ISR blocking; implement fault capture &amp; safe state</td><td>H-1, H-2, H-3</td><td>3–4 days</td></tr>
+      <tr><td>3 — Reliability hardening</td><td>Verify stack sizes, fix narrowing conversions, bounds-check config inputs, close sleep/IRQ race</td><td>M-1…M-4</td><td>2–3 days</td></tr>
+      <tr><td>4 — Hygiene</td><td>Document MISRA deviations, centralize build config, add persistent fault log</td><td>L-1…L-3</td><td>1–2 days</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note"><b>Next step.</b> The two critical items are quick to fix and I can either implement them
+    directly or pair with your team. Several clients continue from a review into a fixed-scope implementation
+    sprint or a fractional retainer — happy to scope whichever fits.</div>
+
+  <div class="foot">
+    <b>Confidentiality.</b> This sample contains no real client code; all snippets and project details are
+    fabricated for illustration. Real engagements are covered by NDA and client code is never reused or
+    disclosed.<br>
+    © Talles Zanotti — Embedded Firmware Engineer · Safety-Critical &amp; Connected Devices · talleszanotti@gmail.com
+  </div>
+
+</div></div>
+</body>
+</html>
